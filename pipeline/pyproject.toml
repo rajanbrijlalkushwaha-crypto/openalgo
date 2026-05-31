@@ -25,8 +25,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["pipeline", "pipeline.producer", "pipeline.consumers",
-            "pipeline.socketio_server", "pipeline.scheduler", "pipeline.config"]
+py-modules = []
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]

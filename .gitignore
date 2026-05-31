@@ -8,7 +8,7 @@ __pycache__/
 
 # Node
 node_modules/
-frontend/build/
+build/
 
 # Logs
 *.log
