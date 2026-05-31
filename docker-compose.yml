@@ -1,48 +1,42 @@
-version: "3.9"
-
 services:
   # ── Kafka (KRaft mode — no ZooKeeper) ──────────────────────────────
   kafka:
-    image: bitnami/kafka:3.7
+    image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
     restart: unless-stopped
     ports:
       - "9092:9092"
-      - "9093:9093"
     environment:
-      KAFKA_CFG_NODE_ID: 1
-      KAFKA_CFG_PROCESS_ROLES: broker,controller
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CFG_NUM_PARTITIONS: 4
-      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 1
-      KAFKA_CFG_LOG_RETENTION_HOURS: 168        # 7 days of ticks
-      KAFKA_CFG_LOG_RETENTION_BYTES: 10737418240 # 10 GB cap per partition
-      KAFKA_CFG_MESSAGE_MAX_BYTES: 1048576
-      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
     volumes:
-      - kafka_data:/bitnami/kafka
+      - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
       interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
-  # ── Dragonfly (Redis-compatible, 25x faster pub/sub) ────────────────
+  # ── Dragonfly (Redis-compatible) ────────────────────────────────────
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
     container_name: dragonfly
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: >
-      --maxmemory=2gb
-      --save_schedule="0 */1 * * *"
-      --dbfilename=dragonfly.rdb
+    command: --maxmemory=2gb --nodf_snapshot_format
     volumes:
       - dragonfly_data:/data
     ulimits:
@@ -76,7 +70,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # ── Kafka UI (dev/admin only — remove in prod) ───────────────────────
+  # ── Kafka UI (dev only) ──────────────────────────────────────────────
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -90,7 +84,7 @@ services:
       kafka:
         condition: service_healthy
     profiles:
-      - dev   # only starts with: docker compose --profile dev up
+      - dev
 
 volumes:
   kafka_data:
