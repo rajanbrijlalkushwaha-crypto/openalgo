@@ -191,7 +191,7 @@ function AppContent() {
 
   // ── Socket.io live stream — tick-by-tick via Dragonfly pub/sub ──────────
   const socketRef = useRef(null);
-  const SOCKETIO_URL = `${window.location.protocol}//${window.location.hostname}:5900`;
+  const SOCKETIO_URL = '';
 
   useEffect(() => {
     if (!state.currentSymbol || state.historicalMode) return;
@@ -222,7 +222,7 @@ function AppContent() {
     const socket = socketRef.current;
 
     // Load initial snapshot — first from Dragonfly REST (instant), then live
-    fetch(`${SOCKETIO_URL}/api/chain/${state.currentSymbol}`)
+    fetch(`/socketio/api/chain/${state.currentSymbol}`)
       .then(r => r.json())
       .then(data => { if (data && !data.error) dispatch({ type: 'SET_LIVE_DATA', payload: data }); })
       .catch(() => {
