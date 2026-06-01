@@ -172,6 +172,15 @@ def on_unsubscribe_chain(sid, data):
     for u in _to_list(data, 'underlying', 'underlyings'):
         sio.leave_room(sid, f'chain:{u}')
 
+# Aliases used by socketioClient.js (emits 'subscribe'/'unsubscribe')
+@sio.on('subscribe')
+def on_subscribe(sid, data):
+    on_subscribe_tick(sid, data)
+
+@sio.on('unsubscribe')
+def on_unsubscribe(sid, data):
+    on_unsubscribe_tick(sid, data)
+
 def _to_list(data, single_key, plural_key):
     if isinstance(data, dict):
         if plural_key in data:  return data[plural_key]
